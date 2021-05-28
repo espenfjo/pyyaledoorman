@@ -1,0 +1,20 @@
+{
+  "result": true,
+  "code": "000",
+  "message": "OK!",
+  "token": "veeeeerylongtoken",
+  "data": [
+    {
+      "area": "1",
+      "zone": "1",
+      "type": "device_type.door_lock",
+      "protocol": "DM",
+      "product_data": "21020120",
+      "configuration": "01FF000001000000000000000000001E000100",
+      "syncing": "0",
+      "lock_status": "35",
+      "number_of_credentials_supported": "10"
+    }
+  ],
+  "time": "0.0028"
+}

@@ -1,0 +1,22 @@
+{
+  "result": true,
+  "code": "000",
+  "message": "OK!",
+  "token": "verylongtoken",
+  "data": {
+    "area": "1",
+    "zone": "1",
+    "device_sid": "RF:001234",
+    "device_type": "device_type.door_lock",
+    "request_value": "1",
+    "dimmer_power_level": false,
+    "hue": false,
+    "saturation": false,
+    "lightness": false,
+    "x": false,
+    "y": false,
+    "temperature": false,
+    "mod": false
+  },
+  "time": "3.2380"
+}
