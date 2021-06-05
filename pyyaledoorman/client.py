@@ -1,7 +1,6 @@
 """Yale API Client. Used to log in to the API and instantiate Devices."""
 import logging
 from datetime import datetime
-from datetime import timedelta
 from http.client import FORBIDDEN
 from http.client import UNAUTHORIZED
 from typing import Any
@@ -16,7 +15,6 @@ from .const import STATUS_CODES
 from .device import Device
 
 _LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL: timedelta = timedelta(minutes=5)
 
 
 class AuthenticationError(Exception):
@@ -38,10 +36,11 @@ class Client:
         session: Optional[ClientSession] = None,
     ) -> None:
         """Initialize the Yalle Doorman Client.
+
         Arguments:
             username: Username for logging in to the Yale API.
             password: Password for logging in to the Yale API.
-            initial_token (optional): Initial token for logging in to the Yale API.
+            initial_token: Initial token for logging in to the Yale API.
             session (optional): aiohttp ClientSession to use.
         """
         self.username = username
@@ -162,8 +161,8 @@ class Client:
         if (self.login_ts + self.token_expires_in) <= (timestamp - 1000):
             await self.login()
 
-    async def update_confs(self) -> None:
-        """ Update the device states."""
+    async def update_devices(self) -> None:
+        """Update the device states."""
         await self.validate_access_token()
         url = f"{BASE_URL}/api/panel/device_status/"
         async with self._session.get(url, raise_for_status=False) as resp:
