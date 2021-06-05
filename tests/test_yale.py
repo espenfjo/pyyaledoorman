@@ -1,7 +1,5 @@
 """Tests for pyyaledoorman."""
 import json
-from datetime import datetime
-from datetime import timedelta
 from typing import Generator
 
 import pytest
@@ -105,7 +103,7 @@ async def test_yale_nosession(mock_aioresponse: aioresponses) -> None:
 
     await yale.login()
 
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         data = await device.lock()
         assert data.get("code") == STATUS_CODES["SUCCESS"]
@@ -123,7 +121,7 @@ async def test_get_deviceconfig(mock_aioresponse: aioresponses) -> None:
     """Verify that the device config can be fetched."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     assert len(yale.devices) == 1
     for device in yale.devices:
         await device.get_deviceconfig()
@@ -133,20 +131,39 @@ async def test_update_twice(mock_aioresponse: aioresponses) -> None:
     """Test running the update twice, check that you still have just one device."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     assert len(yale.devices) == 1
     for device in yale.devices:
         assert device.name == "door"
-    yale._last_conf_update = datetime.now() + timedelta(hours=10)
-    await yale.update_confs()
+    await yale.update_devices()
     assert len(yale.devices) == 1
+    mock_aioresponse.clear()
+
+    mock_aioresponse.get(
+        f"{BASE_URL}/api/panel/cycle/",
+        payload=json.load(open("tests/update_state.json")),
+        status=200,
+        repeat=True,
+    )
+    data = json.load(open("tests/get_devices.json"))
+    data["data"][0]["device_id"] = "another id!"
+    mock_aioresponse.get(
+        f"{BASE_URL}/api/panel/device_status/",
+        payload=data,
+        status=200,
+        repeat=True,
+    )
+    await yale.update_devices()
+    assert len(yale.devices) == 2
+    await yale.update_devices()
+    assert len(yale.devices) == 2
 
 
 async def test_open(mock_aioresponse: aioresponses) -> None:
     """Test the `is_open` logic."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
 
     for device in yale.devices:
         assert device._mingw_status == 35  # locked and closed
@@ -160,7 +177,7 @@ async def test_enable_autolock(mock_aioresponse: aioresponses) -> None:
     """Test enabling autolock."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         await device.enable_autolock()
 
@@ -169,7 +186,7 @@ async def test_disable_autolock(mock_aioresponse: aioresponses) -> None:
     """Test disabling autolock."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         await device.disable_autolock()
 
@@ -184,7 +201,7 @@ async def test_getdevices_fail(mock_aioresponse: aioresponses) -> None:
         payload=json.load(open("tests/update_device_fail.json")),
         status=200,
     )
-    await yale.update_confs()
+    await yale.update_devices()
     assert len(yale.devices) == 0
 
 
@@ -198,7 +215,7 @@ async def test_lock(mock_aioresponse: aioresponses) -> None:
     )
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         data = await device.lock()
         assert data.get("code") == STATUS_CODES["SUCCESS"]
@@ -215,7 +232,7 @@ async def test_unlock(mock_aioresponse: aioresponses) -> None:
     """Test unlocking."""
     yale = Client("test", "test", "test")
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         data = await device.unlock("123456")
         assert data.get("code") == STATUS_CODES["SUCCESS"]
@@ -229,7 +246,7 @@ async def test_update_device_fail(mock_aioresponse: aioresponses) -> None:
     yale = Client("test", "test", "test")
 
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         assert device.state == YALE_LOCK_STATE_LOCKED
         await device.update_state()
@@ -244,7 +261,7 @@ async def test_update_device(mock_aioresponse: aioresponses) -> None:
     yale = Client("test", "test", "test")
 
     await yale.login()
-    await yale.update_confs()
+    await yale.update_devices()
     for device in yale.devices:
         assert device.state == YALE_LOCK_STATE_LOCKED
         await device.update_state()
@@ -259,7 +276,7 @@ async def test_yale_session(mock_aioresponse: aioresponses) -> None:
 
     await yale.login()
     assert yale.token == login_data["access_token"]
-    await yale.update_confs()
+    await yale.update_devices()
     assert yale.login_ts is not None
     assert yale.token_expires_in is not None
 

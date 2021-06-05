@@ -1,7 +1,6 @@
 """Yale API Client. Used to log in to the API and instantiate Devices."""
 import logging
 from datetime import datetime
-from datetime import timedelta
 from http.client import FORBIDDEN
 from http.client import UNAUTHORIZED
 from typing import Any
@@ -16,7 +15,6 @@ from .const import STATUS_CODES
 from .device import Device
 
 _LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL: timedelta = timedelta(minutes=5)
 
 
 class AuthenticationError(Exception):
@@ -36,9 +34,15 @@ class Client:
         password: str,
         initial_token: str = INITIAL_TOKEN,
         session: Optional[ClientSession] = None,
-        conf_update_interval: timedelta = UPDATE_INTERVAL,
     ) -> None:
-        """Initialize the Yalle Doorman Client."""
+        """Initialize the Yalle Doorman Client.
+
+        Arguments:
+            username: Username for logging in to the Yale API.
+            password: Password for logging in to the Yale API.
+            initial_token: Initial token for logging in to the Yale API.
+            session (optional): aiohttp ClientSession to use.
+        """
         self.username = username
         self.password = password
         self.initial_token = initial_token
@@ -50,7 +54,6 @@ class Client:
         else:
             self._session = ClientSession()
             self._managed_session = True
-        self._conf_update_interval: timedelta = conf_update_interval
         self._last_conf_update: Optional[datetime] = None
         self._devices: List[Device] = []
         self._token: Optional[str] = None
@@ -158,29 +161,26 @@ class Client:
         if (self.login_ts + self.token_expires_in) <= (timestamp - 1000):
             await self.login()
 
-    async def update_confs(self) -> None:
-        """Update device_confs.
-
-        Calls are rate limited to allow Device instances to freely poll their own
-        state while refreshing the device_confs list and account.
-        """
-        now = datetime.now()
-        if (
-            self._last_conf_update is not None
-            and now - self._last_conf_update < self._conf_update_interval
-        ):
-            return None
-
-        self._last_conf_update = now
-        await self._get_devices()
-
-    async def _get_devices(self) -> None:
+    async def update_devices(self) -> None:
+        """Update the device states."""
         await self.validate_access_token()
         url = f"{BASE_URL}/api/panel/device_status/"
         async with self._session.get(url, raise_for_status=False) as resp:
             res = await resp.json()
             if res.get("code") == STATUS_CODES["SUCCESS"]:
                 for device in res.get("data"):
+                    existing = False
+                    for existing_device in self._devices:
+                        print(
+                            f"{existing_device.device_id} == {device.get('device_id')}"
+                        )
+                        if existing_device.device_id == device.get("device_id"):
+                            existing = True
+                            await existing_device.update_state()
+                            break
+                    if existing:
+                        continue
+
                     self._devices.append(Device(self, device))
             else:
                 _LOGGER.debug("Couldn't fetch devices. Unknown error!")
