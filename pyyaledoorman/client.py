@@ -26,7 +26,14 @@ class AuthenticationError(Exception):
 
 
 class Client:
-    """Yale Doorman client."""
+    """Yale Doorman client.
+
+    Arguments:
+        username: Username for logging in to the Yale API.
+        password: Password for logging in to the Yale API.
+        initial_token: Initial token for logging in to the Yale API.
+        session (optional): aiohttp ClientSession to use.
+    """
 
     def __init__(
         self,
@@ -35,14 +42,7 @@ class Client:
         initial_token: str = INITIAL_TOKEN,
         session: Optional[ClientSession] = None,
     ) -> None:
-        """Initialize the Yalle Doorman Client.
-
-        Arguments:
-            username: Username for logging in to the Yale API.
-            password: Password for logging in to the Yale API.
-            initial_token: Initial token for logging in to the Yale API.
-            session (optional): aiohttp ClientSession to use.
-        """
+        """Initialize the Yale Doorman Client."""
         self.username = username
         self.password = password
         self.initial_token = initial_token
