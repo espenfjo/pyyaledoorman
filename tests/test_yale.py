@@ -137,7 +137,6 @@ async def test_update_twice(mock_aioresponse: aioresponses) -> None:
     assert len(yale.devices) == 1
     for device in yale.devices:
         assert device.name == "door"
-    yale._last_conf_update = datetime.now() + timedelta(hours=10)
     await yale.update_confs()
     assert len(yale.devices) == 1
 
