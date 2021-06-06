@@ -32,6 +32,7 @@ Pyyaledoorman
    :target: https://github.com/psf/black
    :alt: Black
 
+A Python library for interfacing with the Yale Doorman Home API.
 
 Features
 --------
@@ -46,7 +47,7 @@ Features
 Requirements
 ------------
 
-* Yale Smart user account
+* Yale Doorman home user account.
 
 
 Installation
