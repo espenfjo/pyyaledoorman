@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyyaledoorman"
-version = "1.0.2"
+version = "1.0.3"
 description = "Pyyaledoorman"
 authors = ["Espen Fjellvær Olsen <espen@mrfjo.org>"]
 license = "MIT"
