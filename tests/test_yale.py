@@ -7,7 +7,6 @@ from aiohttp import ClientSession
 from aioresponses import aioresponses
 from pyyaledoorman import Client
 from pyyaledoorman.client import AuthenticationError
-from pyyaledoorman.const import AUTOLOCK_ENABLE
 from pyyaledoorman.const import BASE_URL
 from pyyaledoorman.const import LANG_EN
 from pyyaledoorman.const import VOLUME_OFF
@@ -29,7 +28,9 @@ def mock_aioresponse() -> Generator[aioresponses, None, None]:
         mocked.post(f"{BASE_URL}/o/token/", status=200, payload=login_data, repeat=True)
         mocked.post(f"{BASE_URL}/api/panel/", status=200, repeat=True)
         mocked.post(f"{BASE_URL}/minigw/lock/config/", status=200)
-        mocked.post(f"{BASE_URL}/api/minigw/lock/config/", status=200)
+        mocked.post(
+            f"{BASE_URL}/api/minigw/lock/config/", status=200, payload={"code": "000"}
+        )
         mocked.get(
             f"{BASE_URL}/api/minigw/lock/config/",
             status=200,
@@ -109,7 +110,7 @@ async def test_yale_nosession(mock_aioresponse: aioresponses) -> None:
         assert await device.unlock("123456") is True
         assert device.is_locked is False
         assert device.volume_level == VOLUME_OFF
-        assert device.autolock_status == AUTOLOCK_ENABLE
+        assert device.autolock_enabled is True
         assert device.language == LANG_EN
     await yale._session.close()
 
@@ -176,7 +177,7 @@ async def test_enable_autolock(mock_aioresponse: aioresponses) -> None:
     await yale.login()
     await yale.update_devices()
     for device in yale.devices:
-        await device.enable_autolock()
+        assert await device.enable_autolock() == device.autolock_enabled
 
 
 async def test_disable_autolock(mock_aioresponse: aioresponses) -> None:
@@ -185,7 +186,7 @@ async def test_disable_autolock(mock_aioresponse: aioresponses) -> None:
     await yale.login()
     await yale.update_devices()
     for device in yale.devices:
-        await device.disable_autolock()
+        assert await device.disable_autolock() != device.autolock_enabled
 
 
 async def test_getdevices_fail(mock_aioresponse: aioresponses) -> None:

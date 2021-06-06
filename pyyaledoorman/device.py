@@ -30,6 +30,11 @@ class Device:
 
         Maps API responses to `Device` attributes.
         """
+        self.parse_config(device_config)
+        self._client = client
+
+    def parse_config(self, device_config: Dict[str, str]) -> None:
+        """Parse API responses and sets `Device` configuration."""
         self._device_config = device_config
         self._name = device_config["name"]
         self._id = device_config["device_id"]
@@ -44,8 +49,6 @@ class Device:
             self._mingw_status = int(device_config["minigw_lock_status"], 10)
         except Exception:  # pragma: no cover
             _LOGGER.debug("Couldnt parse mingw lock status", exc_info=True)
-
-        self._client = client
 
     def _get_config_option(self, idx: str) -> str:
         index = int(idx, 10)
@@ -73,14 +76,16 @@ class Device:
         return self._get_config_option(CONFIG_IDX_LANG)
 
     @property
-    def autolock_status(self) -> str:
-        """Return the API status of whether autolock is enabled or not.
+    def autolock_enabled(self) -> bool:
+        """Return whether autolock is enabled.
 
         Returns:
-            * `FF` if autolock is enabled.
-            * `00` if autolock is disabled.
+            bool: `True` if autolock is enabled, otherwise `False`
         """
-        return self._get_config_option(CONFIG_IDX_AUTOLOCK)
+        state = self._get_config_option(CONFIG_IDX_AUTOLOCK)
+        if state == "FF":
+            return True
+        return False
 
     @property
     def is_open(self) -> bool:
@@ -184,13 +189,41 @@ class Device:
                 _LOGGER.debug("Couldnt unlock the door. Unspecified error.")
             return False
 
-    async def enable_autolock(self) -> Dict[str, str]:
-        """Enables autolocking of the lock."""
-        return await self.update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
+    async def enable_autolock(self) -> bool:
+        """Enables autolocking of the lock.
 
-    async def disable_autolock(self) -> Dict[str, str]:
-        """Disables autolocking of the lock."""
-        return await self.update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
+        Return:
+            bool: `True` if successful, `False` otherwise.
+        """
+        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
+        if data.get("code") == STATUS_CODES["SUCCESS"]:
+            self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
+            return True
+        return False  # pragma: no cover
+
+    async def disable_autolock(self) -> bool:
+        """Disables autolocking of the lock.
+
+        Return:
+            bool: `True` if successful, `False` otherwise.
+        """
+        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
+        if data.get("code") == STATUS_CODES["SUCCESS"]:
+            self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
+            return True
+        return False  # pragma: no cover
+
+    def _update_deviceconfig(self, index: str, value: str) -> None:
+        """Fetches the device configuration.
+
+        Arguments:
+            index: The index of the configuration string to update.
+            value: Value to write to the configuration string. Usually a `short`.
+        """
+        idx = int(index, 10)
+        parts = [self._config[i : i + 2] for i in range(0, len(self._config), 2)]
+        parts[idx - 1] = value
+        self._config = "".join(parts)
 
     async def get_deviceconfig(self) -> Dict[str, str]:
         """Fetches the device configuration.
@@ -202,8 +235,8 @@ class Device:
         async with self._client.session.get(url, raise_for_status=True) as resp:
             return cast(Dict[str, str], await resp.json())
 
-    async def update_deviceconfig(self, config_idx: str, value: str) -> Dict[str, str]:
-        """Update device configuration.
+    async def set_deviceconfig(self, config_idx: str, value: str) -> Dict[str, str]:
+        """Sets device configuration.
 
         Arguments:
             config_idx: index of the confiuration option to change.
@@ -229,13 +262,7 @@ class Device:
                 devices = data.get("data", {}).get("device_status", [])
                 for device in devices:
                     if device.get("device_id") == self.device_id:
-                        self._state = device.get("status_open")[0]
-                        try:
-                            self._mingw_status = int(
-                                device.get("minigw_lock_status"), 10
-                            )
-                        except TypeError:  # pragma: no cover
-                            pass
+                        self.parse_config(device)
 
             else:
                 raise Exception("Unknown error")
