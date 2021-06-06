@@ -9,7 +9,7 @@ setup(
     author_email="espen@mrfjo.org",
     license="MIT",
     url="https://github.com/espenfjo/pyyaledoorman",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     packages=["pyyaledoorman"],
     keywords=["homeautomation", "yaledoorman"],
     classifiers=[
