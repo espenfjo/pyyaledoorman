@@ -8,7 +8,9 @@
    :hidden:
    :maxdepth: 1
 
+
    reference
+   usage
    contributing
    Code of Conduct <codeofconduct>
    License <license>

@@ -1,3 +1,5 @@
+.. _reference:
+
 Reference
 =========
 
@@ -6,10 +8,13 @@ Reference
     :backlinks: none
 
 
-pyyaledoorman
--------------
+pyyaledoorman.Client
+--------------------
 
-.. automodule:: pyyaledoorman
+.. automodule:: pyyaledoorman.client
    :members:
+
+pyyaledoorman.Device
+--------------------
 .. automodule:: pyyaledoorman.device
    :members:
