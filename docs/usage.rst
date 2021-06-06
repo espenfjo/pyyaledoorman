@@ -30,5 +30,5 @@ Example usage of the library. Please see the  :ref:`reference` for details.
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-    
+
 .. code-example-end

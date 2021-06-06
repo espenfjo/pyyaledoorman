@@ -8,7 +8,7 @@
    :hidden:
    :maxdepth: 1
 
-   
+
    reference
    usage
    contributing
