@@ -10,7 +10,6 @@ from pyyaledoorman.client import AuthenticationError
 from pyyaledoorman.const import AUTOLOCK_ENABLE
 from pyyaledoorman.const import BASE_URL
 from pyyaledoorman.const import LANG_EN
-from pyyaledoorman.const import STATUS_CODES
 from pyyaledoorman.const import VOLUME_OFF
 from pyyaledoorman.const import YALE_LOCK_STATE_LOCKED
 
@@ -105,12 +104,10 @@ async def test_yale_nosession(mock_aioresponse: aioresponses) -> None:
 
     await yale.update_devices()
     for device in yale.devices:
-        data = await device.lock()
-        assert data.get("code") == STATUS_CODES["SUCCESS"]
-        assert data.get("data").get("device_sid") == device.device_id
-        assert data.get("data").get("device_type") == device.type
-        data = await device.unlock("123456")
-        assert data.get("code") == STATUS_CODES["SUCCESS"]
+        assert await device.lock() is True
+        assert device.is_locked is True
+        assert await device.unlock("123456") is True
+        assert device.is_locked is False
         assert device.volume_level == VOLUME_OFF
         assert device.autolock_status == AUTOLOCK_ENABLE
         assert device.language == LANG_EN
@@ -217,15 +214,11 @@ async def test_lock(mock_aioresponse: aioresponses) -> None:
     await yale.login()
     await yale.update_devices()
     for device in yale.devices:
-        data = await device.lock()
-        assert data.get("code") == STATUS_CODES["SUCCESS"]
-        assert data.get("data").get("device_sid") == device.device_id
-        assert data.get("data").get("device_type") == device.type
+        assert await device.lock() is True
         assert device.is_locked is True
         assert device.state == YALE_LOCK_STATE_LOCKED
         assert device._mingw_status == 35
-        data = await device.lock()
-        assert data.get("code") == STATUS_CODES["ERROR"]
+        assert await device.lock() is False
 
 
 async def test_unlock(mock_aioresponse: aioresponses) -> None:
@@ -234,11 +227,9 @@ async def test_unlock(mock_aioresponse: aioresponses) -> None:
     await yale.login()
     await yale.update_devices()
     for device in yale.devices:
-        data = await device.unlock("123456")
-        assert data.get("code") == STATUS_CODES["SUCCESS"]
+        assert await device.unlock("123456") is True
         assert device.is_locked is False
-        data = await device.unlock("123456")
-        assert data.get("code") == STATUS_CODES["ERROR"]
+        assert await device.unlock("123456") is False
 
 
 async def test_update_device_fail(mock_aioresponse: aioresponses) -> None:

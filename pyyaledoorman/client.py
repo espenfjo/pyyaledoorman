@@ -61,17 +61,21 @@ class Client:
 
     @property
     def login_ts(self) -> float:
-        """Returns the login timestamp."""
+        """Return the login timestamp."""
         return self._login_ts
 
     @login_ts.setter
     def login_ts(self, timestamp: float) -> None:
-        """Sets the login timestamp. Takes a timestamp as argument."""
+        """Sets the login timestamp.
+
+        Arguments:
+            timestamp: Timestamp of whence the API was logged in to.
+        """
         self._login_ts = timestamp
 
     @property
     def token(self) -> Optional[str]:
-        """Returns the access token."""
+        """Return the access token."""
         return self._token
 
     @token.setter
@@ -82,7 +86,7 @@ class Client:
 
     @property
     def refresh_token(self) -> Optional[str]:
-        """Returns the refresh token."""
+        """Return the refresh token."""
         return self._refresh_token
 
     @refresh_token.setter
@@ -92,7 +96,7 @@ class Client:
 
     @property
     def token_expires_in(self) -> int:
-        """Returns seconds from login whence the access token expires."""
+        """Return seconds from login whence the access token expires."""
         return self._token_expires_in
 
     @token_expires_in.setter
@@ -102,16 +106,23 @@ class Client:
 
     @property
     def devices(self) -> List[Device]:
-        """Returns a list of Devices."""
+        """Return list of Devices."""
         return self._devices
 
     @property
     def session(self) -> ClientSession:
-        """Returns the aiohttp session."""
+        """Return the aiohttp session."""
         return self._session
 
     async def login(self) -> bool:  # raises: AuthenticationError
-        """Logs in to the Yale API."""
+        """Logs in to the Yale API.
+
+        Returns:
+            bool: True if successfully logged in.
+
+        Raises:
+            AuthenticationError: Supplied username, password or initial token is wrong.
+        """
         _LOGGER.info("Trying to log in to Yale..")
         headers = {
             "Accept": "application/json",
