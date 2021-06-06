@@ -36,13 +36,17 @@ Pyyaledoorman
 Features
 --------
 
-* TODO
+* Read whether lock is unlocked, locked, or door open
+* Locking / Unlocking
+* Enabling / Disabling auto lock
+* Reading Volume level, Language, Auto lock disabled/enabled
+
 
 
 Requirements
 ------------
 
-* TODO
+* Yale Smart user account
 
 
 Installation
@@ -58,8 +62,11 @@ You can install *Pyyaledoorman* via pip_ from PyPI_:
 Usage
 -----
 
-Please see the `Command-line Reference <Usage_>`_ for details.
+Please see `Usage <Usage_>`_ for details.
 
+.. include:: usage.rst
+   :start-after: code-example
+   :end-before: code-example-end
 
 Contributing
 ------------
