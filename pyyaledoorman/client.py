@@ -182,9 +182,6 @@ class Client:
                 for device in res.get("data"):
                     existing = False
                     for existing_device in self._devices:
-                        print(
-                            f"{existing_device.device_id} == {device.get('device_id')}"
-                        )
                         if existing_device.device_id == device.get("device_id"):
                             existing = True
                             await existing_device.update_state()
