@@ -21,7 +21,7 @@ class AuthenticationError(Exception):
     """Exception for authentication errors."""
 
     def __init__(self, *args: Any) -> None:
-        """Initializes the Exception."""
+        """Initialize the Exception."""
         Exception.__init__(self, *args)
 
 
@@ -66,7 +66,7 @@ class Client:
 
     @login_ts.setter
     def login_ts(self, timestamp: float) -> None:
-        """Sets the login timestamp.
+        """Set the login timestamp.
 
         Arguments:
             timestamp: Timestamp of whence the API was logged in to.
@@ -80,7 +80,7 @@ class Client:
 
     @token.setter
     def token(self, _token: str) -> None:
-        """Sets the access token."""
+        """Set the access token."""
         self._token = _token
         self._session.headers.add("Authorization", f"Bearer {self.token}")
 
@@ -91,7 +91,7 @@ class Client:
 
     @refresh_token.setter
     def refresh_token(self, _refresh_token: Optional[str]) -> None:
-        """Sets the refresh token."""
+        """Set the refresh token."""
         self._refresh_token = _refresh_token
 
     @property
@@ -101,7 +101,7 @@ class Client:
 
     @token_expires_in.setter
     def token_expires_in(self, expires: int) -> None:
-        """Sets number of seconds since login when the access token expires."""
+        """Set number of seconds since login when the access token expires."""
         self._token_expires_in = expires
 
     @property
@@ -115,7 +115,7 @@ class Client:
         return self._session
 
     async def login(self) -> bool:  # raises: AuthenticationError
-        """Logs in to the Yale API.
+        """Log in to the Yale API.
 
         Returns:
             bool: True if successfully logged in.

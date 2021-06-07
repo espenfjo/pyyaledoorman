@@ -26,7 +26,7 @@ class Device:
     """Used to instantiate a Yale Doorman device."""
 
     def __init__(self, client: "Client", device_config: Dict[str, str]) -> None:
-        """Initializes a Yale Doorman `Device`.
+        """Initialize a Yale Doorman `Device`.
 
         Maps API responses to `Device` attributes.
         """
@@ -136,7 +136,7 @@ class Device:
 
     @property
     def device_id(self) -> str:
-        """Returns the device ID."""
+        """Return the device ID."""
         return self._id
 
     async def lock(self) -> bool:
@@ -190,7 +190,7 @@ class Device:
             return False
 
     async def enable_autolock(self) -> bool:
-        """Enables autolocking of the lock.
+        """Enable autolocking of the lock.
 
         Return:
             bool: `True` if successful, `False` otherwise.
@@ -202,7 +202,7 @@ class Device:
         return False  # pragma: no cover
 
     async def disable_autolock(self) -> bool:
-        """Disables autolocking of the lock.
+        """Disable autolocking of the lock.
 
         Return:
             bool: `True` if successful, `False` otherwise.
@@ -214,7 +214,7 @@ class Device:
         return False  # pragma: no cover
 
     def _update_deviceconfig(self, index: str, value: str) -> None:
-        """Fetches the device configuration.
+        """Fetch the device configuration.
 
         Arguments:
             index: The index of the configuration string to update.
@@ -226,7 +226,7 @@ class Device:
         self._config = "".join(parts)
 
     async def get_deviceconfig(self) -> Dict[str, str]:
-        """Fetches the device configuration.
+        """Fetch the device configuration.
 
         Returns:
             The raw API response.
@@ -236,7 +236,7 @@ class Device:
             return cast(Dict[str, str], await resp.json())
 
     async def set_deviceconfig(self, config_idx: str, value: str) -> Dict[str, str]:
-        """Sets device configuration.
+        """Set device configuration.
 
         Arguments:
             config_idx: index of the confiuration option to change.
@@ -253,7 +253,7 @@ class Device:
             return cast(Dict[str, str], await resp.json())
 
     async def update_state(self) -> None:
-        """Updates the `Device` status from the API."""
+        """Update the `Device` status from the API."""
         await self._client.validate_access_token()
         url = f"{BASE_URL}/api/panel/cycle/"
         async with self._client.session.get(url, raise_for_status=False) as resp:
