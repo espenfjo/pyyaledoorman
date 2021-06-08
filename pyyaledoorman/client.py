@@ -4,6 +4,7 @@ from datetime import datetime
 from http.client import FORBIDDEN
 from http.client import UNAUTHORIZED
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -21,7 +22,7 @@ class AuthenticationError(Exception):
     """Exception for authentication errors."""
 
     def __init__(self, *args: Any) -> None:
-        """Initializes the Exception."""
+        """Initialize the Exception."""
         Exception.__init__(self, *args)
 
 
@@ -50,14 +51,12 @@ class Client:
         _LOGGER.info("Logged in to Yale")
         if session:
             self._session = session
-            self._managed_session = False
         else:
             self._session = ClientSession()
-            self._managed_session = True
-        self._last_conf_update: Optional[datetime] = None
         self._devices: List[Device] = []
         self._token: Optional[str] = None
         self._refresh_token: Optional[str] = None
+        self.headers: Dict[str, str] = {}
 
     @property
     def login_ts(self) -> float:
@@ -66,7 +65,7 @@ class Client:
 
     @login_ts.setter
     def login_ts(self, timestamp: float) -> None:
-        """Sets the login timestamp.
+        """Set the login timestamp.
 
         Arguments:
             timestamp: Timestamp of whence the API was logged in to.
@@ -80,9 +79,9 @@ class Client:
 
     @token.setter
     def token(self, _token: str) -> None:
-        """Sets the access token."""
+        """Set the access token."""
         self._token = _token
-        self._session.headers.add("Authorization", f"Bearer {self.token}")
+        self.headers["Authorization"] = f"Bearer {self.token}"
 
     @property
     def refresh_token(self) -> Optional[str]:
@@ -91,7 +90,7 @@ class Client:
 
     @refresh_token.setter
     def refresh_token(self, _refresh_token: Optional[str]) -> None:
-        """Sets the refresh token."""
+        """Set the refresh token."""
         self._refresh_token = _refresh_token
 
     @property
@@ -101,7 +100,7 @@ class Client:
 
     @token_expires_in.setter
     def token_expires_in(self, expires: int) -> None:
-        """Sets number of seconds since login when the access token expires."""
+        """Set number of seconds since login when the access token expires."""
         self._token_expires_in = expires
 
     @property
@@ -115,7 +114,7 @@ class Client:
         return self._session
 
     async def login(self) -> bool:  # raises: AuthenticationError
-        """Logs in to the Yale API.
+        """Log in to the Yale API.
 
         Returns:
             bool: True if successfully logged in.
@@ -164,7 +163,7 @@ class Client:
             self.refresh_token = data.get("refresh_token")
             return True
 
-    async def validate_access_token(self) -> None:
+    async def _validate_access_token(self) -> None:
         """Verify that our access token is still valid."""
         now = datetime.now()
         timestamp = datetime.timestamp(now)
@@ -174,9 +173,11 @@ class Client:
 
     async def update_devices(self) -> None:
         """Update the device states."""
-        await self.validate_access_token()
+        await self._validate_access_token()
         url = f"{BASE_URL}/api/panel/device_status/"
-        async with self._session.get(url, raise_for_status=False) as resp:
+        async with self._session.get(
+            url, headers=self.headers, raise_for_status=False
+        ) as resp:
             res = await resp.json()
             if res.get("code") == STATUS_CODES["SUCCESS"]:
                 for device in res.get("data"):

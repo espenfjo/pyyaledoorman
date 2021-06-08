@@ -26,7 +26,7 @@ class Device:
     """Used to instantiate a Yale Doorman device."""
 
     def __init__(self, client: "Client", device_config: Dict[str, str]) -> None:
-        """Initializes a Yale Doorman `Device`.
+        """Initialize a Yale Doorman `Device`.
 
         Maps API responses to `Device` attributes.
         """
@@ -136,7 +136,7 @@ class Device:
 
     @property
     def device_id(self) -> str:
-        """Returns the device ID."""
+        """Return the device ID."""
         return self._id
 
     async def lock(self) -> bool:
@@ -145,7 +145,7 @@ class Device:
         Returns:
             bool: True if locking was successful, False otherwise.
         """
-        await self._client.validate_access_token()
+        await self._client._validate_access_token()
         params = {
             "area": self.area,
             "device_sid": self.address,
@@ -155,7 +155,7 @@ class Device:
         }
         url = f"{BASE_URL}/api/panel/device_control/"
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
             data: Dict[str, str] = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
@@ -174,12 +174,12 @@ class Device:
         Returns:
              bool: True if unlock successful, False otherwise.
         """
-        await self._client.validate_access_token()
+        await self._client._validate_access_token()
         url = f"{BASE_URL}/api/minigw/unlock/"
         params = {"area": self.area, "zone": 1, "pincode": pincode}
 
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
             data: Dict[str, str] = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
@@ -190,31 +190,29 @@ class Device:
             return False
 
     async def enable_autolock(self) -> bool:
-        """Enables autolocking of the lock.
+        """Enable autolocking of the lock.
 
         Return:
             bool: `True` if successful, `False` otherwise.
         """
-        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
-        if data.get("code") == STATUS_CODES["SUCCESS"]:
+        if await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE):
             self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
             return True
         return False  # pragma: no cover
 
     async def disable_autolock(self) -> bool:
-        """Disables autolocking of the lock.
+        """Disable autolocking of the lock.
 
         Return:
             bool: `True` if successful, `False` otherwise.
         """
-        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
-        if data.get("code") == STATUS_CODES["SUCCESS"]:
+        if await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE):
             self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
             return True
         return False  # pragma: no cover
 
     def _update_deviceconfig(self, index: str, value: str) -> None:
-        """Fetches the device configuration.
+        """Fetch the device configuration.
 
         Arguments:
             index: The index of the configuration string to update.
@@ -226,39 +224,46 @@ class Device:
         self._config = "".join(parts)
 
     async def get_deviceconfig(self) -> Dict[str, str]:
-        """Fetches the device configuration.
+        """Fetch the device configuration.
 
         Returns:
             The raw API response.
         """
         url = f"{BASE_URL}/api/minigw/lock/config/"
-        async with self._client.session.get(url, raise_for_status=True) as resp:
+        async with self._client.session.get(
+            url, headers=self._client.headers, raise_for_status=True
+        ) as resp:
             return cast(Dict[str, str], await resp.json())
 
-    async def set_deviceconfig(self, config_idx: str, value: str) -> Dict[str, str]:
-        """Sets device configuration.
+    async def set_deviceconfig(self, config_idx: str, value: str) -> bool:
+        """Set device configuration.
 
         Arguments:
             config_idx: index of the confiuration option to change.
             value: new value to write.
 
         Returns:
-            Raw API results.
+            bool: True if the device config was updated successfully, False otherwise.
         """
         url = f"{BASE_URL}/api/minigw/lock/config/"
         params = {"area": self.area, "zone": 1, "idx": config_idx, "val": value}
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
-            return cast(Dict[str, str], await resp.json())
+            data = await resp.json()
+            if data.get("code") == STATUS_CODES["SUCCESS"]:
+                return True
+            return False  # pragma: no cover
 
     async def update_state(self) -> None:
-        """Updates the `Device` status from the API."""
-        await self._client.validate_access_token()
+        """Update the `Device` status from the API."""
+        await self._client._validate_access_token()
         url = f"{BASE_URL}/api/panel/cycle/"
-        async with self._client.session.get(url, raise_for_status=False) as resp:
+        async with self._client.session.get(
+            url, headers=self._client.headers, raise_for_status=False
+        ) as resp:
             data = await resp.json()
-            if data.get("message") == "OK!":
+            if data.get("code") == STATUS_CODES["SUCCESS"]:
                 devices = data.get("data", {}).get("device_status", [])
                 for device in devices:
                     if device.get("device_id") == self.device_id:
