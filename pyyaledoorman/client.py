@@ -50,11 +50,8 @@ class Client:
         _LOGGER.info("Logged in to Yale")
         if session:
             self._session = session
-            self._managed_session = False
         else:
             self._session = ClientSession()
-            self._managed_session = True
-        self._last_conf_update: Optional[datetime] = None
         self._devices: List[Device] = []
         self._token: Optional[str] = None
         self._refresh_token: Optional[str] = None
