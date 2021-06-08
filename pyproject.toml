@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyyaledoorman"
-version = "1.0.8"
+version = "1.0.9"
 description = "Python library for the Yale Doorman Smart API"
 authors = ["Espen Fjellvær Olsen <espen@mrfjo.org>"]
 license = "MIT"
