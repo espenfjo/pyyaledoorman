@@ -4,6 +4,7 @@ from datetime import datetime
 from http.client import FORBIDDEN
 from http.client import UNAUTHORIZED
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -55,6 +56,7 @@ class Client:
         self._devices: List[Device] = []
         self._token: Optional[str] = None
         self._refresh_token: Optional[str] = None
+        self.headers: Dict[str, str] = {}
 
     @property
     def login_ts(self) -> float:
@@ -79,7 +81,7 @@ class Client:
     def token(self, _token: str) -> None:
         """Set the access token."""
         self._token = _token
-        self._session.headers.add("Authorization", f"Bearer {self.token}")
+        self.headers["Authorization"] = f"Bearer {self.token}"
 
     @property
     def refresh_token(self) -> Optional[str]:
@@ -173,7 +175,9 @@ class Client:
         """Update the device states."""
         await self.validate_access_token()
         url = f"{BASE_URL}/api/panel/device_status/"
-        async with self._session.get(url, raise_for_status=False) as resp:
+        async with self._session.get(
+            url, headers=self.headers, raise_for_status=False
+        ) as resp:
             res = await resp.json()
             if res.get("code") == STATUS_CODES["SUCCESS"]:
                 for device in res.get("data"):

@@ -25,7 +25,12 @@ login_data = {
 def mock_aioresponse() -> Generator[aioresponses, None, None]:
     """Setup for various mocked API calls."""
     with aioresponses() as mocked:
-        mocked.post(f"{BASE_URL}/o/token/", status=200, payload=login_data, repeat=True)
+        mocked.post(
+            f"{BASE_URL}/o/token/",
+            status=200,
+            payload=login_data,
+            repeat=True,
+        )
         mocked.post(f"{BASE_URL}/api/panel/", status=200, repeat=True)
         mocked.post(f"{BASE_URL}/minigw/lock/config/", status=200)
         mocked.post(

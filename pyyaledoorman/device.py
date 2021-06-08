@@ -155,7 +155,7 @@ class Device:
         }
         url = f"{BASE_URL}/api/panel/device_control/"
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
             data: Dict[str, str] = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
@@ -174,12 +174,12 @@ class Device:
         Returns:
              bool: True if unlock successful, False otherwise.
         """
-        await self._client.validate_access_token()
+        await self._client._validate_access_token()
         url = f"{BASE_URL}/api/minigw/unlock/"
         params = {"area": self.area, "zone": 1, "pincode": pincode}
 
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
             data: Dict[str, str] = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
@@ -230,7 +230,9 @@ class Device:
             The raw API response.
         """
         url = f"{BASE_URL}/api/minigw/lock/config/"
-        async with self._client.session.get(url, raise_for_status=True) as resp:
+        async with self._client.session.get(
+            url, headers=self._client.headers, raise_for_status=True
+        ) as resp:
             return cast(Dict[str, str], await resp.json())
 
     async def set_deviceconfig(self, config_idx: str, value: str) -> bool:
@@ -246,7 +248,7 @@ class Device:
         url = f"{BASE_URL}/api/minigw/lock/config/"
         params = {"area": self.area, "zone": 1, "idx": config_idx, "val": value}
         async with self._client.session.post(
-            url, data=params, raise_for_status=True
+            url, data=params, headers=self._client.headers, raise_for_status=True
         ) as resp:
             data = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
@@ -257,7 +259,9 @@ class Device:
         """Update the `Device` status from the API."""
         await self._client.validate_access_token()
         url = f"{BASE_URL}/api/panel/cycle/"
-        async with self._client.session.get(url, raise_for_status=False) as resp:
+        async with self._client.session.get(
+            url, headers=self._client.headers, raise_for_status=False
+        ) as resp:
             data = await resp.json()
             if data.get("code") == STATUS_CODES["SUCCESS"]:
                 devices = data.get("data", {}).get("device_status", [])
