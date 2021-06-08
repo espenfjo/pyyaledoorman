@@ -96,10 +96,10 @@ async def test_login(mock_aioresponse: aioresponses) -> None:
     await yale.login()
     assert yale.token == login_data["access_token"]
     assert yale.refresh_token == login_data["refresh_token"]
-    await yale.validate_access_token()
+    await yale._validate_access_token()
     yale.login_ts = yale.login_ts - yale.token_expires_in - 1001
     with pytest.raises(AuthenticationError, match=r".*Check credentials*"):
-        await yale.validate_access_token()
+        await yale._validate_access_token()
 
 
 async def test_yale_nosession(mock_aioresponse: aioresponses) -> None:

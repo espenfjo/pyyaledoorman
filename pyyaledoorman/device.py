@@ -145,7 +145,7 @@ class Device:
         Returns:
             bool: True if locking was successful, False otherwise.
         """
-        await self._client.validate_access_token()
+        await self._client._validate_access_token()
         params = {
             "area": self.area,
             "device_sid": self.address,
@@ -257,7 +257,7 @@ class Device:
 
     async def update_state(self) -> None:
         """Update the `Device` status from the API."""
-        await self._client.validate_access_token()
+        await self._client._validate_access_token()
         url = f"{BASE_URL}/api/panel/cycle/"
         async with self._client.session.get(
             url, headers=self._client.headers, raise_for_status=False

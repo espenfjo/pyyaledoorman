@@ -163,7 +163,7 @@ class Client:
             self.refresh_token = data.get("refresh_token")
             return True
 
-    async def validate_access_token(self) -> None:
+    async def _validate_access_token(self) -> None:
         """Verify that our access token is still valid."""
         now = datetime.now()
         timestamp = datetime.timestamp(now)
@@ -173,7 +173,7 @@ class Client:
 
     async def update_devices(self) -> None:
         """Update the device states."""
-        await self.validate_access_token()
+        await self._validate_access_token()
         url = f"{BASE_URL}/api/panel/device_status/"
         async with self._session.get(
             url, headers=self.headers, raise_for_status=False
