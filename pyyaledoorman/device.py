@@ -195,8 +195,7 @@ class Device:
         Return:
             bool: `True` if successful, `False` otherwise.
         """
-        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
-        if data.get("code") == STATUS_CODES["SUCCESS"]:
+        if await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE):
             self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_ENABLE)
             return True
         return False  # pragma: no cover
@@ -207,8 +206,7 @@ class Device:
         Return:
             bool: `True` if successful, `False` otherwise.
         """
-        data = await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
-        if data.get("code") == STATUS_CODES["SUCCESS"]:
+        if await self.set_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE):
             self._update_deviceconfig(CONFIG_IDX_AUTOLOCK, AUTOLOCK_DISABLE)
             return True
         return False  # pragma: no cover
@@ -235,7 +233,7 @@ class Device:
         async with self._client.session.get(url, raise_for_status=True) as resp:
             return cast(Dict[str, str], await resp.json())
 
-    async def set_deviceconfig(self, config_idx: str, value: str) -> Dict[str, str]:
+    async def set_deviceconfig(self, config_idx: str, value: str) -> bool:
         """Set device configuration.
 
         Arguments:
@@ -243,14 +241,17 @@ class Device:
             value: new value to write.
 
         Returns:
-            Raw API results.
+            bool: True if the device config was updated successfully, False otherwise.
         """
         url = f"{BASE_URL}/api/minigw/lock/config/"
         params = {"area": self.area, "zone": 1, "idx": config_idx, "val": value}
         async with self._client.session.post(
             url, data=params, raise_for_status=True
         ) as resp:
-            return cast(Dict[str, str], await resp.json())
+            data = await resp.json()
+            if data.get("code") == STATUS_CODES["SUCCESS"]:
+                return True
+            return False  # pragma: no cover
 
     async def update_state(self) -> None:
         """Update the `Device` status from the API."""
@@ -258,7 +259,7 @@ class Device:
         url = f"{BASE_URL}/api/panel/cycle/"
         async with self._client.session.get(url, raise_for_status=False) as resp:
             data = await resp.json()
-            if data.get("message") == "OK!":
+            if data.get("code") == STATUS_CODES["SUCCESS"]:
                 devices = data.get("data", {}).get("device_status", [])
                 for device in devices:
                     if device.get("device_id") == self.device_id:
